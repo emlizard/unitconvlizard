@@ -365,7 +365,7 @@
                 <button class="category-btn" onclick="showCategory('temperature')">🌡️ Temperature</button>
                 <button class="category-btn" onclick="showCategory('energy')">⚡ Energy</button>
                 <button class="category-btn" onclick="showCategory('force')">💪 Force</button>
-                <button class="category-btn" onclick="showCategory('electrical')">🔌 Electrical</button>
+                
             </div>
 
             <!-- Length Conversion -->
@@ -705,52 +705,7 @@
                 <div id="forceFormula" class="formula"></div>
             </div>
 
-            <!-- Electrical Conversion -->
-            <div id="electrical" class="converter-section">
-                <h2>🔌 Electrical Units Conversion</h2>
-                <div class="converter-grid">
-                    <div class="input-group">
-                        <label>Input Value</label>
-                        <input type="number" id="electricalInput" value="1" placeholder="Enter number" oninput="convertElectrical()">
-                        <select id="electricalFrom" onchange="convertElectrical()">
-                            <option value="v">Volt (V)</option>
-                            <option value="kv">Kilovolt (kV)</option>
-                            <option value="mv">Millivolt (mV)</option>
-                            <option value="a">Ampere (A)</option>
-                            <option value="ma">Milliampere (mA)</option>
-                            <option value="ua">Microampere (μA)</option>
-                            <option value="ohm">Ohm (Ω)</option>
-                            <option value="kohm">Kiloohm (kΩ)</option>
-                            <option value="mohm">Megaohm (MΩ)</option>
-                            <option value="w">Watt (W)</option>
-                            <option value="kw">Kilowatt (kW)</option>
-                            <option value="mw">Megawatt (MW)</option>
-                        </select>
-                    </div>
-                    
-                    <button class="swap-btn" onclick="swapUnits('electrical')" title="Swap Units">⇄</button>
-                    
-                    <div class="input-group">
-                        <label>Converted Result</label>
-                        <input type="number" id="electricalOutput" readonly>
-                        <select id="electricalTo" onchange="convertElectrical()">
-                            <option value="v">Volt (V)</option>
-                            <option value="kv" selected>Kilovolt (kV)</option>
-                            <option value="mv">Millivolt (mV)</option>
-                            <option value="a">Ampere (A)</option>
-                            <option value="ma">Milliampere (mA)</option>
-                            <option value="ua">Microampere (μA)</option>
-                            <option value="ohm">Ohm (Ω)</option>
-                            <option value="kohm">Kiloohm (kΩ)</option>
-                            <option value="mohm">Megaohm (MΩ)</option>
-                            <option value="w">Watt (W)</option>
-                            <option value="kw">Kilowatt (kW)</option>
-                            <option value="mw">Megawatt (MW)</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="electricalFormula" class="formula"></div>
-            </div>
+            
         </div>
     </div>
 
