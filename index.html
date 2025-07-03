@@ -365,7 +365,7 @@
                 <button class="category-btn" onclick="showCategory('temperature')">🌡️ Temperature</button>
                 <button class="category-btn" onclick="showCategory('energy')">⚡ Energy</button>
                 <button class="category-btn" onclick="showCategory('force')">💪 Force</button>
-                
+                <button class="category-btn" onclick="showCategory('power')">⚡ Power</button>
             </div>
 
             <!-- Length Conversion -->
@@ -705,7 +705,46 @@
                 <div id="forceFormula" class="formula"></div>
             </div>
 
-            
+            <!-- Power Conversion -->
+            <div id="power" class="converter-section">
+                <h2>⚡ Power Conversion</h2>
+                <div class="converter-grid">
+                    <div class="input-group">
+                        <label>Input Value</label>
+                        <input type="number" id="powerInput" value="1" placeholder="Enter number" oninput="convertPower()">
+                        <select id="powerFrom" onchange="convertPower()">
+                            <option value="w">Watt (W)</option>
+                            <option value="mw">Milliwatt (mW)</option>
+                            <option value="kw">Kilowatt (kW)</option>
+                            <option value="mw_unit">Megawatt (MW)</option>
+                            <option value="hp">Horsepower (HP)</option>
+                            <option value="va">Volt-Ampere (VA)</option>
+                            <option value="kcal_h">kcal/h</option>
+                            <option value="dbm">dBm</option>
+                            <option value="dbw">dBW</option>
+                        </select>
+                    </div>
+                    
+                    <button class="swap-btn" onclick="swapUnits('power')" title="Swap Units">⇄</button>
+                    
+                    <div class="input-group">
+                        <label>Converted Result</label>
+                        <input type="number" id="powerOutput" readonly>
+                        <select id="powerTo" onchange="convertPower()">
+                            <option value="w">Watt (W)</option>
+                            <option value="kw" selected>Kilowatt (kW)</option>
+                            <option value="mw">Milliwatt (mW)</option>
+                            <option value="mw_unit">Megawatt (MW)</option>
+                            <option value="hp">Horsepower (HP)</option>
+                            <option value="va">Volt-Ampere (VA)</option>
+                            <option value="kcal_h">kcal/h</option>
+                            <option value="dbm">dBm</option>
+                            <option value="dbw">dBW</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="powerFormula" class="formula"></div>
+            </div>
         </div>
     </div>
 
@@ -789,23 +828,14 @@
                 kgf: 0.101972,
                 dyn: 100000
             },
-            electrical: {
-                // Voltage units
-                v: 1,
-                kv: 0.001,
-                mv: 1000,
-                // Current units (independent)
-                a: 1,
-                ma: 1000,
-                ua: 1000000,
-                // Resistance units (independent)
-                ohm: 1,
-                kohm: 0.001,
-                mohm: 0.000001,
-                // Power units (independent)
+            power: {
                 w: 1,
+                mw: 1000,
                 kw: 0.001,
-                mw: 0.000001
+                mw_unit: 0.000001,
+                hp: 0.00134102,  // 1 HP = 745.7 W
+                va: 1,  // VA는 apparent power
+                kcal_h: 0.859845  // 1 kcal/h = 1.163 W
             }
         };
 
@@ -854,36 +884,37 @@
             if (category === 'temperature') {
                 result = convertTemperatureUnits(input, fromUnit, toUnit);
                 formula = getTemperatureFormula(input, fromUnit, toUnit);
-            } else if (category === 'electrical') {
-                // Electrical units can only convert within same type
-                const voltageUnits = ['v', 'kv', 'mv'];
-                const currentUnits = ['a', 'ma', 'ua'];
-                const resistanceUnits = ['ohm', 'kohm', 'mohm'];
-                const powerUnits = ['w', 'kw', 'mw'];
-                
-                let canConvert = false;
-                if (voltageUnits.includes(fromUnit) && voltageUnits.includes(toUnit)) canConvert = true;
-                if (currentUnits.includes(fromUnit) && currentUnits.includes(toUnit)) canConvert = true;
-                if (resistanceUnits.includes(fromUnit) && resistanceUnits.includes(toUnit)) canConvert = true;
-                if (powerUnits.includes(fromUnit) && powerUnits.includes(toUnit)) canConvert = true;
-                
-                if (!canConvert) {
-                    document.getElementById(category + 'Output').value = '';
-                    document.getElementById(category + 'Formula').innerHTML = 'Can only convert between same electrical unit types.';
-                    return;
+            } else if (category === 'power') {
+                // Power units - dBm and dBW need special handling
+                if (fromUnit === 'dbm' || toUnit === 'dbm' || fromUnit === 'dbw' || toUnit === 'dbw') {
+                    result = convertPowerUnits(input, fromUnit, toUnit);
+                    formula = getPowerFormula(input, fromUnit, toUnit, result);
+                } else {
+                    // Standard linear conversion for other power units
+                    const baseValue = input / conversions[category][fromUnit];
+                    result = baseValue * conversions[category][toUnit];
+                    let formattedFormulaResult = Math.abs(result) >= 1000000 || (Math.abs(result) < 0.001 && result !== 0) ? 
+                        result.toExponential(6) : parseFloat(result.toPrecision(8)).toString();
+                    formula = `${input} × (1/${conversions[category][fromUnit]}) × ${conversions[category][toUnit]} = ${formattedFormulaResult}`;
                 }
-                
-                const baseValue = input / conversions[category][fromUnit];
-                result = baseValue * conversions[category][toUnit];
-                formula = `${input} × (1/${conversions[category][fromUnit]}) × ${conversions[category][toUnit]} = ${result.toExponential(6)}`;
             } else {
                 // Default conversion (base unit conversion)
                 const baseValue = input / conversions[category][fromUnit];
                 result = baseValue * conversions[category][toUnit];
-                formula = `${input} × (1/${conversions[category][fromUnit]}) × ${conversions[category][toUnit]} = ${result.toExponential(6)}`;
+                let formattedFormulaResult = Math.abs(result) >= 1000000 || (Math.abs(result) < 0.001 && result !== 0) ? 
+                    result.toExponential(6) : parseFloat(result.toPrecision(8)).toString();
+                formula = `${input} × (1/${conversions[category][fromUnit]}) × ${conversions[category][toUnit]} = ${formattedFormulaResult}`;
             }
 
-            document.getElementById(category + 'Output').value = result.toExponential(6);
+            // Format result as regular number with appropriate precision
+            let formattedResult;
+            if (Math.abs(result) >= 1000000 || (Math.abs(result) < 0.001 && result !== 0)) {
+                formattedResult = result.toExponential(6);
+            } else {
+                formattedResult = parseFloat(result.toPrecision(8)).toString();
+            }
+            
+            document.getElementById(category + 'Output').value = formattedResult;
             document.getElementById(category + 'Formula').innerHTML = `Conversion Formula: ${formula}`;
         }
 
@@ -927,6 +958,56 @@
             return formulas[`${from}-${to}`] || `${from} → ${to}`;
         }
 
+        // Power conversion function for dB units
+        function convertPowerUnits(value, from, to) {
+            let watts;
+            
+            // Convert to watts first
+            if (from === 'dbm') {
+                watts = Math.pow(10, value / 10) / 1000;
+            } else if (from === 'dbw') {
+                watts = Math.pow(10, value / 10);
+            } else {
+                watts = value / conversions.power[from];
+            }
+            
+            // Convert from watts to target unit
+            if (to === 'dbm') {
+                return 10 * Math.log10(watts * 1000);
+            } else if (to === 'dbw') {
+                return 10 * Math.log10(watts);
+            } else {
+                return watts * conversions.power[to];
+            }
+        }
+
+        // Power formula display for dB units
+        function getPowerFormula(value, from, to, result) {
+            if (from === 'dbm' && to === 'dbw') {
+                return `dBW = dBm - 30 = ${value} - 30`;
+            } else if (from === 'dbw' && to === 'dbm') {
+                return `dBm = dBW + 30 = ${value} + 30`;
+            } else if (from === 'dbm') {
+                return `P(W) = 10^(dBm/10) / 1000 = 10^(${value}/10) / 1000, then convert to ${to}`;
+            } else if (from === 'dbw') {
+                return `P(W) = 10^(dBW/10) = 10^(${value}/10), then convert to ${to}`;
+            } else if (to === 'dbm') {
+                // Calculate original power in watts
+                const watts = value / conversions.power[from];
+                const milliwatts = watts * 1000;
+                const milliwattsFormatted = Math.abs(milliwatts) >= 1000000 || (Math.abs(milliwatts) < 0.001 && milliwatts !== 0) ? 
+                    milliwatts.toExponential(6) : parseFloat(milliwatts.toPrecision(8)).toString();
+                return `dBm = 10 × log₁₀(P_mW) = 10 × log₁₀(${milliwattsFormatted})`;
+            } else if (to === 'dbw') {
+                // Calculate original power in watts
+                const watts = value / conversions.power[from];
+                const wattsFormatted = Math.abs(watts) >= 1000000 || (Math.abs(watts) < 0.001 && watts !== 0) ? 
+                    watts.toExponential(6) : parseFloat(watts.toPrecision(8)).toString();
+                return `dBW = 10 × log₁₀(P_W) = 10 × log₁₀(${wattsFormatted})`;
+            }
+            return `${from} → ${to}`;
+        }
+
         // Swap units
         function swapUnits(category) {
             const fromSelect = document.getElementById(category + 'From');
@@ -950,7 +1031,7 @@
         function convertTemperature() { convert('temperature'); }
         function convertEnergy() { convert('energy'); }
         function convertForce() { convert('force'); }
-        function convertElectrical() { convert('electrical'); }
+        function convertPower() { convert('power'); }
 
         // Show first category on page load
         window.onload = function() {
